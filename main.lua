@@ -14,10 +14,12 @@ local function DoTableMove(a, b, c, d)
             if testTable[g] ~= 0 and isCarry then
                 testTable[h], testTable[g] = swap(testTable[h], testTable[g])
                 isCarry = false
-            elseif testTable[g] == testTable[h] and isCarry == false then
-                testTable[h] = testTable[g] + testTable[h]
-                testTable[g] = 0
-                GameScore = GameScore + testTable[h]
+            elseif isCarry == false and testTable[g] ~= 0 then
+                if testTable[g] == testTable[h] then 
+                    testTable[h] = testTable[g] + testTable[h]
+                    testTable[g] = 0
+                    GameScore = GameScore + testTable[h] 
+                end
                 break
             end 
         end 
@@ -51,7 +53,7 @@ local function DetectionKeyClick()
 end
 
 
-isWin = false
+isLose = false
 GameScore = 0
 GameHighScore = 0
 GameArray = {}
@@ -63,6 +65,8 @@ function love.load()
     love.audio.play(music)
     BgImage = love.graphics.newImage("bg.jpg")
     BgTransform = love.math.newTransform(0, 0, 0, 0.8, 0.8, 580, 80)
+    LoseImage = love.graphics.newImage("lose.png")
+    LoseTransform = love.math.newTransform(0, 0, 0, 0.8, 0.8, 580, 80)
     SquareImage = love.graphics.newImage("kpbg.png")
     InitGame()
 end
@@ -82,9 +86,15 @@ function love.draw()
     --打印最高分数
     love.graphics.print(GameHighScore, 402, 50, 0, 2, 2)
     UpdateGameScreen()
+    if isLose then
+        love.graphics.draw(LoseImage, LoseTransform)
+    end
 end
 
-function love.keyreleased(key)   
+function love.keyreleased(key)
+    if isLose then
+        return
+    end
     for i = 1, 4 do
         for j = 1, 4 do
             TableCache[i][j] = GameArray[i][j]
@@ -114,11 +124,61 @@ function love.keyreleased(key)
         for j = 1, 4 do
             if TableCache[i][j] ~= GameArray[i][j] then
                 RandomSetSquare2()
+                isLose = detectIsLose()
                 return
             end
         end
     end
 end
+
+function love.mousereleased(x, y, button, istouch)
+    if button == 1 then
+       fireSlingshot(x,y) -- this totally awesome custom function is defined elsewhere
+    end
+end
+
+function fireSlingshot(x,y) 
+    if x > 430 and x < 530 and y > 630 and y < 670 then
+        InitGame()
+    end
+end
+
+--检测玩家是否输了
+function detectIsLose()
+    for x = 1, 4 do
+        for y = 1, 4 do
+            local fx = x - 1
+            local fy = y
+            if fx >= 1 and fx <= 4 and fy >= 1 and fy <= 4 then
+                if GameArray[fx][fy] == 0 or GameArray[x][y] == GameArray[fx][fy] then
+                    return false
+                end
+            end 
+            fx = x + 1
+            fy = y
+            if fx >= 1 and fx <= 4 and fy >= 1 and fy <= 4 then
+                if GameArray[fx][fy] == 0 or GameArray[x][y] == GameArray[fx][fy] then
+                    return false
+                end
+            end 
+            fx = x
+            fy = y - 1
+            if fx >= 1 and fx <= 4 and fy >= 1 and fy <= 4 then
+                if GameArray[fx][fy] == 0 or GameArray[x][y] == GameArray[fx][fy] then
+                    return false
+                end
+            end 
+            fx = x
+            fy = y + 1
+            if fx >= 1 and fx <= 4 and fy >= 1 and fy <= 4 then
+                if GameArray[fx][fy] == 0 or GameArray[x][y] == GameArray[fx][fy] then
+                    return false
+                end
+            end 
+        end
+    end
+    return true
+end 
 
 --创建数字方块
 function CreaterSquare(arrayX, arrayY, num)
@@ -135,6 +195,7 @@ function CreaterSquare(arrayX, arrayY, num)
 end
 --初始化游戏
 function InitGame()
+    isLose = false
     GameScore = 0
     math.randomseed(os.time())
     --print(os.time())
@@ -159,14 +220,13 @@ function InitGame()
 end
 
 --随机生成1个2号方块
-function RandomSetSquare2()   
+function RandomSetSquare2()
     local numRandX
     local numRandY 
     repeat
         numRandX = math.random(4)
         numRandY = math.random(4)
     until GameArray[numRandX][numRandY] == 0
-
     GameArray[numRandX][numRandY] = 2
 end
 
