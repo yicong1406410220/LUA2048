@@ -62,6 +62,7 @@ TableCache = {}
 function love.load()
     love.window.setMode(600, 750)
     music = love.audio.newSource("BG.mp3", "stream")
+    clickSound = love.audio.newSource("btnClick.mp3", "static")
     love.audio.play(music)
     BgImage = love.graphics.newImage("bg.jpg")
     BgTransform = love.math.newTransform(0, 0, 0, 0.8, 0.8, 580, 80)
@@ -124,6 +125,7 @@ function love.keyreleased(key)
         for j = 1, 4 do
             if TableCache[i][j] ~= GameArray[i][j] then
                 RandomSetSquare2()
+                love.audio.play(clickSound)
                 isLose = detectIsLose()
                 return
             end
@@ -137,8 +139,10 @@ function love.mousereleased(x, y, button, istouch)
     end
 end
 
+--点击位置
 function fireSlingshot(x,y) 
     if x > 430 and x < 530 and y > 630 and y < 670 then
+        love.audio.play(clickSound)
         InitGame()
     end
 end
